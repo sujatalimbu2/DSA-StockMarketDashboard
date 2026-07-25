@@ -10,11 +10,27 @@ import util.Constants;
 
 public class StockManager {
 
-    // Thread-safe queue (Producer -> Consumer)
-    private BlockingQueue<StockQuote> queue;
+    private final BlockingQueue<StockQuote> queue;
+    private final List<StockQuote> history;
 
-    // Store all historical data
-    private List<StockQuote> history;
+    private int producedCount = 0;
+    private int consumedCount = 0;
+
+    public synchronized void incrementProduced() {
+        producedCount++;
+    }
+
+    public synchronized void incrementConsumed() {
+        consumedCount++;
+    }
+
+    public synchronized int getProducedCount() {
+        return producedCount;
+    }
+
+    public synchronized int getConsumedCount() {
+        return consumedCount;
+    }
 
     public StockManager() {
 
@@ -30,6 +46,10 @@ public class StockManager {
 
     public List<StockQuote> getHistory() {
         return history;
+    }
+
+    public int getQueueSize() {
+        return queue.size();
     }
 
 }

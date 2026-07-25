@@ -11,6 +11,7 @@ public class DataConsumer implements Runnable {
     private StockManager manager;
     private MainFrame frame;
     private volatile boolean running = true;
+    private Thread thread;
 
     public DataConsumer(StockManager manager, MainFrame frame) {
         this.manager = manager;
@@ -19,6 +20,7 @@ public class DataConsumer implements Runnable {
 
     @Override
     public void run() {
+        thread = Thread.currentThread();
 
         while (running) {
 
@@ -27,13 +29,20 @@ public class DataConsumer implements Runnable {
                 // Take a stock quote from the queue
                 StockQuote quote = manager.getQueue().take();
 
+                manager.incrementConsumed();
+
+                // Save to history
+                manager.getHistory().add(quote);
+
                 // Update the GUI safely
                 SwingUtilities.invokeLater(() -> {
                     frame.addQuote(quote);
+                    frame.updateConsumed(manager.getConsumedCount());
                 });
 
             } catch (InterruptedException e) {
                 running = false;
+                Thread.currentThread().interrupt();
             }
 
         }
@@ -43,6 +52,10 @@ public class DataConsumer implements Runnable {
     // Stop the consumer safely
     public void stopConsumer() {
         running = false;
+
+        if (thread != null) {
+            thread.interrupt();
+        }
     }
 
 }
